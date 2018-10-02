@@ -10,7 +10,7 @@
 using namespace std;
 
 #include "../../../../CppUtils/cpp/TimeMeasurements.h"
-using namespace mutua::utils;
+using namespace mutua::cpputils;
 
 #include "../../cpp/AlgorithmComplexityAndReentrancyAnalysis.h"
 #include "../../../SplitRun/cpp/SplitRun.h"

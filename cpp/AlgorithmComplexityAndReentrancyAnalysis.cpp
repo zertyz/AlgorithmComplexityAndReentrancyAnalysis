@@ -9,7 +9,7 @@
 using namespace mutua::testutils;
 
 #include "../../../CppUtils/cpp/TimeMeasurements.h"
-using namespace mutua::utils;
+using namespace mutua::cpputils;
 
 using namespace std;
 

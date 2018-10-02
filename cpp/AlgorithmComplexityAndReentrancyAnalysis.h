@@ -1,6 +1,6 @@
 //#pragma once
-#ifndef HASHTABLESPIKES_DATABASEALGORITHMANALYSIS_H
-#define HASHTABLESPIKES_DATABASEALGORITHMANALYSIS_H
+#ifndef MUTUA_TESTUTILS_ALGORITHMCOMPLEXITYANDREENTRANCYANALYSIS_H
+#define MUTUA_TESTUTILS_ALGORITHMCOMPLEXITYANDREENTRANCYANALYSIS_H
 
 #include <string>
 #include <tuple>
@@ -11,8 +11,8 @@ using namespace std;
 namespace mutua::testutils {
 
     /**
-     * DatabaseAlgorithmAnalysis.cpp
-     * =============================
+     * AlgorithmComplexityAndReentrancyAnalysis.cpp
+     * ============================================
      * created (in Java) by luiz, Jul 28, 2015, as DatabaseAlgorithmAnalysis.java
      * transcoded to C++ by luiz, Sep 18, 2018
      * last transcoding  by luiz, Sep 18, 2018
@@ -176,4 +176,4 @@ namespace mutua::testutils {
     };
 }
 
-#endif //HASHTABLESPIKES_DATABASEALGORITHMANALYSIS_H
+#endif //MUTUA_TESTUTILS_ALGORITHMCOMPLEXITYANDREENTRANCYANALYSIS_H
