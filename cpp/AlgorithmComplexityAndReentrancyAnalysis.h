@@ -102,13 +102,13 @@ namespace mutua::testutils {
         enum class EResetOccasion {PRE_WARMUP_RESET, FULL_RESET, FINAL_RESET};
         virtual void resetTables(EResetOccasion occasion) = 0;
 
-        // complexity analysis
-        //////////////////////
+        // complexity analysis & reentrancy algorithms under test
+        /////////////////////////////////////////////////////////
 
-        virtual void insertForComplexityAnalysis(unsigned int i);
-        virtual void updateForComplexityAnalysis(unsigned int i);
-        virtual void selectForComplexityAnalysis(unsigned int i);
-        virtual void deleteForComplexityAnalysis(unsigned int i);
+        virtual void insertAlgorithm(unsigned int i);
+        virtual void selectAlgorithm(unsigned int i);
+        virtual void updateAlgorithm(unsigned int i);
+        virtual void deleteAlgorithm(unsigned int i);
 
         /**
          * Returns :
@@ -127,15 +127,8 @@ namespace mutua::testutils {
         >
             analyseComplexity(bool performWarmUp, int insertThreads, int updateThreads, int selectThreads, int deleteThreads, bool verbose);
 
-        // reentrancy tests
-        ///////////////////
-
-        virtual void insertForReentrancyTests(unsigned int i);
-        virtual void selectForReentrancyTests(unsigned int i);
-        virtual void updateForReentrancyTests(unsigned int i);
-        virtual void deleteForReentrancyTests(unsigned int i);
-
-        EAlgorithmComplexity testReentrancy(unsigned int numberOfElements, bool verbose);
+        EAlgorithmComplexity
+			testReentrancy(unsigned int numberOfElements, bool verbose);
 
 
         /** Performs the algorithm analysis for a reasonably large update/select operation (on a database or not).

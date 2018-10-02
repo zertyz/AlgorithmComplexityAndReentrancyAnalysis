@@ -194,9 +194,12 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
     class HelloDatabaseAlgorithmAnalysisWorld: public AlgorithmComplexityAndReentrancyAnalysis {
     public:
         std::vector<int> elements;
+        std::mutex  changeGuard;
+        std::mutex* selectGuard;
 
         HelloDatabaseAlgorithmAnalysisWorld()
-                : AlgorithmComplexityAndReentrancyAnalysis("Hello, Database Algorithm Analysis World!!", 2000, 2000, 2000) {
+                : AlgorithmComplexityAndReentrancyAnalysis("Hello, Database Algorithm Analysis World!!", 2000, 2000, 2000)
+                , selectGuard(nullptr) {
             elements = std::vector<int>(2000);
         }
 
@@ -204,23 +207,40 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
             elements.clear();
         }
 
-        void insertForComplexityAnalysis(unsigned int i) override {
+        void insertAlgorithm(unsigned int i) override {
+            std::lock_guard<std::mutex> lock(changeGuard);
+        	selectGuard = &changeGuard;
             elements[i] = i;
+            selectGuard = nullptr;
         }
 
-        void updateForComplexityAnalysis(unsigned int i) override {
-            elements[i] = -i;
+        void selectAlgorithm(unsigned int i) override {
+        	if (selectGuard != nullptr) std::lock_guard<std::mutex> lock(*selectGuard);
+            if (elements[i] != ((int)i)) {
+                cerr << "Select: item #" << i << ", on the insert phase, should be " << ((int)i) << " but is " << elements[i] << endl << flush;
+            }
         }
 
-        void selectForComplexityAnalysis(unsigned int i) override {
-            int e = elements[i];
+        void updateAlgorithm(unsigned int i) override {
+            std::lock_guard<std::mutex> lock(changeGuard);
+        	selectGuard = &changeGuard;
+            elements[i] = -((int)i);
+            selectGuard = nullptr;
         }
 
-        void deleteForComplexityAnalysis(unsigned int i) override {
-            elements.pop_back();
+        void deleteAlgorithm(unsigned int i) override {
+            std::lock_guard<std::mutex> lock(changeGuard);
+        	selectGuard = &changeGuard;
+        	int value = elements[i];
+            elements[i] -1;
+            if (value != -((int)i)) {
+                cerr << "Delete: item #" << i << ", on the update phase, should be " << -((int)i) << " but was " << value << endl << flush;
+            }
+            selectGuard = nullptr;
         }
     };
     HelloDatabaseAlgorithmAnalysisWorld().analyseComplexity(true, 4, 4, 4, 4, true);
+    HelloDatabaseAlgorithmAnalysisWorld().testReentrancy(2000, true);
 
     class ReentrancyExperiments: public AlgorithmComplexityAndReentrancyAnalysis {
     public:
@@ -228,73 +248,34 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
         std::vector<int> updateElements;
         std::vector<int> selectElements;
         std::vector<int> deleteElements;
-        std::mutex opGuard;
-        int currentOperation;   // 1: inserting, 2: updating, 3: selecting, 4: deleting
-        int pass;
-        int index;
 
         ReentrancyExperiments()
                 : AlgorithmComplexityAndReentrancyAnalysis("ReentrancyExperiments", _numberOfElements) {
-            insertElements = std::vector<int>(_numberOfElements, 0);
-            updateElements = std::vector<int>(_numberOfElements, 0);
-            selectElements = std::vector<int>(_numberOfElements, 0);
-            deleteElements = std::vector<int>(_numberOfElements, 0);
-            currentOperation = 0;
         }
 
-        void resetTables(EResetOccasion occasion) override {}
-
-        void insertForComplexityAnalysis(unsigned int i) override {
-
-            std::lock_guard<std::mutex> lock(opGuard);
-
-            if (currentOperation != 1) {
-                if (currentOperation == 0) {
-                    pass = 1;
-                } else {
-                    pass = 2;
-                }
-                currentOperation = 1;
-                index = (pass-1)*(_numberOfElements/2);
-            }
-
-            insertElements[index++]++;
+        void resetTables(EResetOccasion occasion) override {
+        	if (occasion == EResetOccasion::FULL_RESET) {
+				insertElements = std::vector<int>(_numberOfElements, 0);
+				updateElements = std::vector<int>(_numberOfElements, 0);
+				selectElements = std::vector<int>(_numberOfElements, 0);
+				deleteElements = std::vector<int>(_numberOfElements, 0);
+        	}
         }
 
-        void updateForComplexityAnalysis(unsigned int i) override {
-
-            std::lock_guard<std::mutex> lock(opGuard);
-
-            if (currentOperation != 2) {
-                currentOperation = 2;
-                index = (pass-1)*(_numberOfElements/2);
-            }
-
-            updateElements[index++]++;
+        void insertAlgorithm(unsigned int i) override {
+            insertElements[i]++;
         }
 
-        void selectForComplexityAnalysis(unsigned int i) override {
-
-            std::lock_guard<std::mutex> lock(opGuard);
-
-            if (currentOperation != 3) {
-                currentOperation = 3;
-                index = (pass-1)*(_numberOfElements/2);
-            }
-
-            selectElements[index++]++;
+        void selectAlgorithm(unsigned int i) override {
+            selectElements[i]++;
         }
 
-        void deleteForComplexityAnalysis(unsigned int i) override {
+        void updateAlgorithm(unsigned int i) override {
+            updateElements[i]++;
+        }
 
-            std::lock_guard<std::mutex> lock(opGuard);
-
-            if (currentOperation != 4) {
-                currentOperation = 4;
-                index = 0;
-            }
-
-            deleteElements[index++]++;
+        void deleteAlgorithm(unsigned int i) override {
+            deleteElements[i]++;
         }
 
         int countGaps(std::vector<int> operation) {
@@ -323,6 +304,8 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
     };
     ReentrancyExperiments reentrancyExperiments = ReentrancyExperiments();
     reentrancyExperiments.analyseComplexity(false, _threads, _threads, _threads, _threads, true);
+    reentrancyExperiments.report();
+    reentrancyExperiments.testReentrancy(_numberOfElements, true);
     reentrancyExperiments.report();
 
     cout << "Memory Leak Tests (go check on top if the ram usage is constant over time): " << flush;

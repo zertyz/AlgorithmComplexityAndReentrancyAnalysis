@@ -50,27 +50,27 @@ AlgorithmComplexityAndReentrancyAnalysis::
             : AlgorithmComplexityAndReentrancyAnalysis(testName, elements, elements, elements) {}
 
 
-// complexity analysis
-//////////////////////
+// complexity analysis & reentrancy algorithms under test
+/////////////////////////////////////////////////////////
 
 
-void AlgorithmComplexityAndReentrancyAnalysis::insertForComplexityAnalysis(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis instance to test INSERTs, you must override 'insertForComplexityAnalysis'");
+void AlgorithmComplexityAndReentrancyAnalysis::insertAlgorithm(unsigned int i) {
+    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate INSERTs, you must override 'insertAlgorithm'");
 }
 
 
-void AlgorithmComplexityAndReentrancyAnalysis::updateForComplexityAnalysis(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis instance to test UPDATEs, you must override 'updateForComplexityAnalysis'");
+void AlgorithmComplexityAndReentrancyAnalysis::selectAlgorithm(unsigned int i) {
+    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate SELECTs, you must override 'selectAlgorithm'");
 }
 
 
-void AlgorithmComplexityAndReentrancyAnalysis::selectForComplexityAnalysis(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis instance to test SELECTs, you must override 'selectForComplexityAnalysis'");
+void AlgorithmComplexityAndReentrancyAnalysis::updateAlgorithm(unsigned int i) {
+    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate UPDATEs, you must override 'updateAlgorithm'");
 }
 
 
-void AlgorithmComplexityAndReentrancyAnalysis::deleteForComplexityAnalysis(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis instance to test DELETEs, you must override 'deleteForComplexityAnalysis'");
+void AlgorithmComplexityAndReentrancyAnalysis::deleteAlgorithm(unsigned int i) {
+    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate DELETEs, you must override 'deleteAlgorithm'");
 }
 
 
@@ -99,7 +99,7 @@ public:
 
     void splitRun() override {
         for (unsigned int i=perThreadNumberOfOperations*threadNumber; i<perThreadNumberOfOperations*(threadNumber+1)/100; i++) {
-            algorithms->insertForComplexityAnalysis(i);
+            algorithms->insertAlgorithm(i);
         }
     }
 };
@@ -111,7 +111,7 @@ public:
 
     void splitRun() override {
         for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
-            algorithms->insertForComplexityAnalysis(i);
+            algorithms->insertAlgorithm(i);
         }
     }
 };
@@ -123,7 +123,7 @@ public:
 
     void splitRun() override {
         for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
-            algorithms->updateForComplexityAnalysis(i);
+            algorithms->updateAlgorithm(i);
         }
     }
 };
@@ -135,7 +135,7 @@ public:
 
     void splitRun() override {
         for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
-            algorithms->selectForComplexityAnalysis(i);
+            algorithms->selectAlgorithm(i);
         }
     }
 };
@@ -147,7 +147,7 @@ public:
 
     void splitRun() override {
         for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
-            algorithms->deleteForComplexityAnalysis(i);
+            algorithms->deleteAlgorithm(i);
         }
     }
 };
@@ -218,7 +218,7 @@ tuple<
             if (verbose) cerr << "Insert " << flush;
             std::vector<unique_ptr<InsertSplitRun>> insertSplitRunInstances(insertThreads);
             for (int threadNumber=0; threadNumber<insertThreads; threadNumber++) {
-                insertSplitRunInstances[threadNumber] = unique_ptr<InsertSplitRun>(new InsertSplitRun(threadNumber, perThreadInserts, this, pass, inserts));
+                insertSplitRunInstances[threadNumber] = unique_ptr<InsertSplitRun>(new InsertSplitRun(threadNumber, perThreadInserts, this, pass, numberOfFirstPassInsertElements));
                 SplitRun::add(*insertSplitRunInstances[threadNumber]);
             }
             insertStart[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
@@ -226,30 +226,30 @@ tuple<
             insertEnd[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
         }
 
-        // UPDATES
-        if (updateThreads > 0) {
-            if (verbose) cerr << "Update " << flush;
-            std::vector<unique_ptr<UpdateSplitRun>> updateSplitRunInstances(updateThreads);
-            for (int threadNumber=0; threadNumber<updateThreads; threadNumber++) {
-                updateSplitRunInstances[threadNumber] = unique_ptr<UpdateSplitRun>(new UpdateSplitRun(threadNumber, perThreadUpdates, this, pass, inserts));
-                SplitRun::add(*updateSplitRunInstances[threadNumber]);
-            }
-            updateStart[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
-            tie(updateExceptions[pass-1], updateExceptionReportMessages[pass-1]) = SplitRun::runAndWaitForAll();
-            updateEnd[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
-        }
-
         // SELECTS
         if (selectThreads > 0) {
             if (verbose) cerr << "Select " << flush;
             std::vector<unique_ptr<SelectSplitRun>> selectSplitRunInstances(selectThreads);
             for (int threadNumber=0; threadNumber<selectThreads; threadNumber++) {
-                selectSplitRunInstances[threadNumber] = unique_ptr<SelectSplitRun>(new SelectSplitRun(threadNumber, perThreadSelects, this, pass, inserts));
+                selectSplitRunInstances[threadNumber] = unique_ptr<SelectSplitRun>(new SelectSplitRun(threadNumber, perThreadSelects, this, pass, numberOfFirstPassSelectElements));
                 SplitRun::add(*selectSplitRunInstances[threadNumber]);
             }
             selectStart[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
             tie(selectExceptions[pass-1], selectExceptionReportMessages[pass-1]) = SplitRun::runAndWaitForAll();
             selectEnd[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
+        }
+
+        // UPDATES
+        if (updateThreads > 0) {
+            if (verbose) cerr << "Update " << flush;
+            std::vector<unique_ptr<UpdateSplitRun>> updateSplitRunInstances(updateThreads);
+            for (int threadNumber=0; threadNumber<updateThreads; threadNumber++) {
+                updateSplitRunInstances[threadNumber] = unique_ptr<UpdateSplitRun>(new UpdateSplitRun(threadNumber, perThreadUpdates, this, pass, numberOfFirstPassUpdateElements));
+                SplitRun::add(*updateSplitRunInstances[threadNumber]);
+            }
+            updateStart[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
+            tie(updateExceptions[pass-1], updateExceptionReportMessages[pass-1]) = SplitRun::runAndWaitForAll();
+            updateEnd[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
         }
     }
 
@@ -275,7 +275,7 @@ tuple<
             // DELETES
             std::vector<unique_ptr<DeleteSplitRun>> deleteSplitRunInstances(deleteThreads);
             for (int threadNumber=0; threadNumber<deleteThreads; threadNumber++) {
-                deleteSplitRunInstances[threadNumber] = unique_ptr<DeleteSplitRun>(new DeleteSplitRun(threadNumber, perThreadDeletes, this, pass, inserts));
+                deleteSplitRunInstances[threadNumber] = unique_ptr<DeleteSplitRun>(new DeleteSplitRun(threadNumber, perThreadDeletes, this, pass, numberOfFirstPassDeleteElements));
                 SplitRun::add(*deleteSplitRunInstances[threadNumber]);
             }
             deleteStart[pass-1] = TimeMeasurements::getMonotonicRealTimeUS();
@@ -328,30 +328,6 @@ tuple<
 }
 
 
-// reentrancy tests
-///////////////////
-
-
-void AlgorithmComplexityAndReentrancyAnalysis::insertForReentrancyTests(unsigned int i) {
-    throw std::runtime_error("If you want your reentrancy tests instance to test INSERTs, you must override 'insertForReentrancyTests' and 'selectForReentrancyTests'");
-}
-
-
-void AlgorithmComplexityAndReentrancyAnalysis::selectForReentrancyTests(unsigned int i) {
-    throw std::runtime_error("If you want your reentrancy tests instance to test SELECTs, you must override 'selectForReentrancyTests'");
-}
-
-
-void AlgorithmComplexityAndReentrancyAnalysis::updateForReentrancyTests(unsigned int i) {
-    throw std::runtime_error("If you want your reentrancy tests instance to test UPDATEs, you must override 'updateForReentrancyTests' and ''");
-}
-
-
-void AlgorithmComplexityAndReentrancyAnalysis::deleteForReentrancyTests(unsigned int i) {
-    throw std::runtime_error("If you want your reentrancy tests instance to test DELETEs, you must override 'deleteForReentrancyTests'");
-}
-
-
 class ReentrancySplitRunTest: public SplitRun {
 public:
     AlgorithmComplexityAndReentrancyAnalysis* algorithms;
@@ -387,7 +363,7 @@ public:
             for (insertIndex=0; insertIndex<numberOfElements; insertIndex++) {
                 if (verbosityFactor && (insertIndex % verbosityFactor == 0)) cerr << "I" << flush;
                 unsigned long long int start  = TimeMeasurements::getMonotonicRealTimeUS();
-                algorithms->insertForReentrancyTests(insertIndex);
+                algorithms->insertAlgorithm(insertIndex);
                 unsigned long long int finish = TimeMeasurements::getMonotonicRealTimeUS();
                 timeusSpentInserting += finish-start;
             }
@@ -396,7 +372,7 @@ public:
                 while (selectIndex >= insertIndex) this_thread::sleep_for(chrono::milliseconds(100));
                 if (verbosityFactor && (selectIndex % verbosityFactor == 0)) cerr << "S" << flush;
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
-                algorithms->selectForReentrancyTests(selectIndex);
+                algorithms->selectAlgorithm(selectIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
                 timeusSpentTestingInsertsAndSelecting += finish-start;
             }
@@ -405,7 +381,7 @@ public:
                 while (updateIndex >= selectIndex) this_thread::sleep_for(chrono::milliseconds(100));
                 if (verbosityFactor && (updateIndex % verbosityFactor == 0)) cerr << "U" << flush;
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
-                algorithms->updateForReentrancyTests(updateIndex);
+                algorithms->updateAlgorithm(updateIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
                 timeusSpentUpdating += finish-start;
             }
@@ -414,7 +390,7 @@ public:
                 while (deleteIndex >= updateIndex) this_thread::sleep_for(chrono::milliseconds(100));
                 if (verbosityFactor && (deleteIndex % verbosityFactor == 0)) cerr << "D" << flush;
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
-                algorithms->deleteForReentrancyTests(deleteIndex);
+                algorithms->deleteAlgorithm(deleteIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
                 timeusSpentTestingUpdatesAndDeleting += finish-start;
             }
@@ -453,6 +429,7 @@ AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity AlgorithmComplexi
 
     return EAlgorithmComplexity::BetterThanO1;
 }
+
 
 std::tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, string> AlgorithmComplexityAndReentrancyAnalysis::
     computeUpdateOrSelectAlgorithmAnalysis(
