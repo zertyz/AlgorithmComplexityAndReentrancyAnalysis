@@ -37,11 +37,11 @@ EAlgorithmComplexityToString(EAlgorithmComplexity complexity) {
 
 
 AlgorithmComplexityAndReentrancyAnalysis::
-        AlgorithmComplexityAndReentrancyAnalysis(string testName, int numberOfInsertElements, int numberOfUpdateElements, int numberOfSelectElements)
+        AlgorithmComplexityAndReentrancyAnalysis(string testName, int numberOfInsertElements, int numberOfSelectElements, int numberOfUpdateElements)
             : testName                (testName)
             , inserts                 (numberOfInsertElements)
+			, selects                 (numberOfSelectElements)
             , updates                 (numberOfUpdateElements)
-            , selects                 (numberOfSelectElements)
             , deletes                 (numberOfInsertElements) {}
 
 
@@ -116,18 +116,6 @@ public:
     }
 };
 
-class UpdateSplitRun: public AlgorithmAnalysisSplitRun {
-public:
-    UpdateSplitRun(int threadNumber, int perThreadNumberOfOperations, AlgorithmComplexityAndReentrancyAnalysis* algorithms, int pass, int perPassNumberOfElements)
-            : AlgorithmAnalysisSplitRun(threadNumber, perThreadNumberOfOperations, algorithms, pass, perPassNumberOfElements) {}
-
-    void splitRun() override {
-        for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
-            algorithms->updateAlgorithm(i);
-        }
-    }
-};
-
 class SelectSplitRun: public AlgorithmAnalysisSplitRun {
 public:
     SelectSplitRun(int threadNumber, int perThreadNumberOfOperations, AlgorithmComplexityAndReentrancyAnalysis* algorithms, int pass, int perPassNumberOfElements)
@@ -136,6 +124,18 @@ public:
     void splitRun() override {
         for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
             algorithms->selectAlgorithm(i);
+        }
+    }
+};
+
+class UpdateSplitRun: public AlgorithmAnalysisSplitRun {
+public:
+    UpdateSplitRun(int threadNumber, int perThreadNumberOfOperations, AlgorithmComplexityAndReentrancyAnalysis* algorithms, int pass, int perPassNumberOfElements)
+            : AlgorithmAnalysisSplitRun(threadNumber, perThreadNumberOfOperations, algorithms, pass, perPassNumberOfElements) {}
+
+    void splitRun() override {
+        for (unsigned int i=((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*threadNumber)); i<((perPassNumberOfElements*(pass-1))+(perThreadNumberOfOperations*(threadNumber+1))); i++) {
+            algorithms->updateAlgorithm(i);
         }
     }
 };
@@ -154,28 +154,28 @@ public:
 
 tuple<
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // INSERTs
-      tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // SELECTs
+      tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>       // DELETEs
 > AlgorithmComplexityAndReentrancyAnalysis::
-        analyseComplexity(bool performWarmUp, int insertThreads, int updateThreads, int selectThreads, int deleteThreads, bool verbose) {
+        analyseComplexity(bool performWarmUp, int insertThreads, int selectThreads, int updateThreads, int deleteThreads, bool verbose) {
 
     constexpr int        numberOfPasses = 2;
     unsigned int         perThreadInserts = inserts / numberOfPasses / insertThreads;
-    unsigned int         perThreadUpdates = updates / numberOfPasses / updateThreads;
     unsigned int         perThreadSelects = selects / numberOfPasses / selectThreads;
+    unsigned int         perThreadUpdates = updates / numberOfPasses / updateThreads;
     unsigned int         perThreadDeletes = deletes / numberOfPasses / deleteThreads;
     unsigned int         numberOfFirstPassInsertElements = inserts / numberOfPasses, numberOfSecondPassInsertElements = inserts;
-    unsigned int         numberOfFirstPassUpdateElements = updates / numberOfPasses, numberOfSecondPassUpdateElements = updates;
     unsigned int         numberOfFirstPassSelectElements = selects / numberOfPasses, numberOfSecondPassSelectElements = selects;
+    unsigned int         numberOfFirstPassUpdateElements = updates / numberOfPasses, numberOfSecondPassUpdateElements = updates;
     unsigned int         numberOfFirstPassDeleteElements = deletes / numberOfPasses, numberOfSecondPassDeleteElements = deletes;
     unsigned long long   insertStart[numberOfPasses], insertEnd[numberOfPasses];
-    unsigned long long   updateStart[numberOfPasses], updateEnd[numberOfPasses];
     unsigned long long   selectStart[numberOfPasses], selectEnd[numberOfPasses];
+    unsigned long long   updateStart[numberOfPasses], updateEnd[numberOfPasses];
     unsigned long long   deleteStart[numberOfPasses], deleteEnd[numberOfPasses];
     vector<string>       insertExceptions[numberOfPasses], insertExceptionReportMessages[numberOfPasses];
-    vector<string>       updateExceptions[numberOfPasses], updateExceptionReportMessages[numberOfPasses];
     vector<string>       selectExceptions[numberOfPasses], selectExceptionReportMessages[numberOfPasses];
+    vector<string>       updateExceptions[numberOfPasses], updateExceptionReportMessages[numberOfPasses];
     vector<string>       deleteExceptions[numberOfPasses], deleteExceptionReportMessages[numberOfPasses];
     EAlgorithmComplexity insertComplexity;
     EAlgorithmComplexity selectComplexity;
@@ -200,7 +200,7 @@ tuple<
 
     resetTables(EResetOccasion::FULL_RESET);
 
-    // insert / update / select passes
+    // insert / select / select passes
     //////////////////////////////////
 
     for (int pass=1; pass<=numberOfPasses; pass++) {
@@ -296,18 +296,18 @@ tuple<
                                                                                                 insertStart[1], insertEnd[1], inserts/2);
         if (verbose) cerr << algorithmAnalisysReport << endl << flush;
     }
-    if (updateThreads > 0) {
-        tie(updateComplexity, algorithmAnalisysReport) = computeUpdateOrSelectAlgorithmAnalysis("Update",
-                                                                                                updateStart[0], updateEnd[0],
-                                                                                                updateStart[1], updateEnd[1],
-                                                                                                numberOfFirstPassUpdateElements, numberOfSecondPassUpdateElements, updates);
-        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
-    }
     if (selectThreads > 0) {
-        tie(selectComplexity, algorithmAnalisysReport) = computeUpdateOrSelectAlgorithmAnalysis("Select",
+        tie(selectComplexity, algorithmAnalisysReport) = computeSelectOrUpdateAlgorithmAnalysis("Select",
                                                                                                 selectStart[0], selectEnd[0],
                                                                                                 selectStart[1], selectEnd[1],
                                                                                                 numberOfFirstPassSelectElements, numberOfSecondPassSelectElements, selects);
+        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
+    }
+    if (updateThreads > 0) {
+        tie(updateComplexity, algorithmAnalisysReport) = computeSelectOrUpdateAlgorithmAnalysis("Update",
+                                                                                                updateStart[0], updateEnd[0],
+                                                                                                updateStart[1], updateEnd[1],
+                                                                                                numberOfFirstPassUpdateElements, numberOfSecondPassUpdateElements, updates);
         if (verbose) cerr << algorithmAnalisysReport << endl << flush;
     }
     if (deleteThreads > 0) {
@@ -321,8 +321,8 @@ tuple<
 
     return {
         {insertComplexity, insertEnd[0]-insertStart[0], insertEnd[1]-insertStart[1], insertExceptions[0], insertExceptions[1], insertExceptionReportMessages[0], insertExceptionReportMessages[1]},     // INSERTs
-        {updateComplexity, updateEnd[0]-updateStart[0], updateEnd[1]-updateStart[1], updateExceptions[0], updateExceptions[1], updateExceptionReportMessages[0], updateExceptionReportMessages[1]},     // UPDATEs
         {selectComplexity, selectEnd[0]-selectStart[0], selectEnd[1]-selectStart[1], selectExceptions[0], selectExceptions[1], selectExceptionReportMessages[0], selectExceptionReportMessages[1]},     // SELECTs
+        {updateComplexity, updateEnd[0]-updateStart[0], updateEnd[1]-updateStart[1], updateExceptions[0], updateExceptions[1], updateExceptionReportMessages[0], updateExceptionReportMessages[1]},     // UPDATEs
         {deleteComplexity, deleteEnd[0]-deleteStart[0], deleteEnd[1]-deleteStart[1], deleteExceptions[0], deleteExceptions[1], deleteExceptionReportMessages[0], deleteExceptionReportMessages[1]}      // DELETEs
     };
 }
@@ -336,8 +336,8 @@ public:
     unsigned int                              numberOfElements;
     unsigned int                              verbosityFactor;
     unsigned int                              insertIndex;
-    unsigned int                              updateIndex;
     unsigned int                              selectIndex;
+    unsigned int                              updateIndex;
     unsigned int                              deleteIndex;
     unsigned long long int                    timeusSpentInserting;
     unsigned long long int                    timeusSpentTestingInsertsAndSelecting;
@@ -432,7 +432,7 @@ AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity AlgorithmComplexi
 
 
 std::tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, string> AlgorithmComplexityAndReentrancyAnalysis::
-    computeUpdateOrSelectAlgorithmAnalysis(
+    computeSelectOrUpdateAlgorithmAnalysis(
         const string&            operation,
         const unsigned long int& start1,
         const unsigned long int& end1,

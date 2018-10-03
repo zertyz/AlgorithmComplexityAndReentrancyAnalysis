@@ -50,18 +50,18 @@ unsigned int ONInsert(unsigned int n) {
 }
 
 
-// update functions
+// select functions
 ///////////////////
 // 'n' should be the total elements on each pass
 // note: returning 'r' is needed in order for compiler optimizations not avoid looping
 
-unsigned int O1Update(unsigned int n) {
+unsigned int O1Select(unsigned int n) {
     unsigned int r = 0;
     for (unsigned int i=0; i<DELAY_CONSTANT; i++) r ^= i;
     return r;
 }
 
-unsigned int OLogNUpdate(unsigned int n) {
+unsigned int OLogSelect(unsigned int n) {
     unsigned int r = 0;
     while (n > 0) {
         for (unsigned int i=0; i<DELAY_CONSTANT; i++) r ^= i;
@@ -70,7 +70,7 @@ unsigned int OLogNUpdate(unsigned int n) {
     return r;
 }
 
-unsigned int ONUpdate(unsigned int n) {
+unsigned int ONSelect(unsigned int n) {
     unsigned int r = 0;
     while (n > 0) {
         for (unsigned int i=0; i<DELAY_CONSTANT; i++) r ^= i;
@@ -103,20 +103,20 @@ void databaseAlgorithmAnalysisLowLevelExperiments() {
     cout << "\t::WorseThanOn:       " << AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexityToString(AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity::WorseThanOn)       << endl;
 
     // insertion test:
-    cout << "If Updating/Selecting in O(1), I'd get: " << endl;
-    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeUpdateOrSelectAlgorithmAnalysis("Update/Select Test"s, 100, 200, 200, 300, 1000, 2000, 1000);
+    cout << "If Selecting/Updating in O(1), I'd get: " << endl;
+    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeSelectOrUpdateAlgorithmAnalysis("Update/Select Test"s, 100, 200, 200, 300, 1000, 2000, 1000);
     cout << algorithmAnalysisReport << flush;
-    cout << "If Updating/Selecting in O(log(n)), I'd get: " << endl;
-    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeUpdateOrSelectAlgorithmAnalysis("Update/Select Test"s, 100, 200, 200, 311, 1000, 2000, 1000);
+    cout << "If Selecting/Updating in O(log(n)), I'd get: " << endl;
+    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeSelectOrUpdateAlgorithmAnalysis("Update/Select Test"s, 100, 200, 200, 311, 1000, 2000, 1000);
     cout << algorithmAnalysisReport << flush;
 
-    AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity lastUpdateOrSelectComplexity = AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity::BetterThanO1;
-    AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity currentUpdateOrSelectComplexity;
+    AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity lastSelectOrUpdateComplexity = AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity::BetterThanO1;
+    AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity currentSelectOrUpdateComplexity;
     for (unsigned long endMillis = 300; endMillis < 10000; endMillis++) {
-        tie(currentUpdateOrSelectComplexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeUpdateOrSelectAlgorithmAnalysis("Insertion Test"s, 100, 200, 200, endMillis, 1000, 2000, 1000);
-        if (currentUpdateOrSelectComplexity != lastUpdateOrSelectComplexity) {
-            cout << "Update/Select test started measuring " << AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexityToString(currentUpdateOrSelectComplexity) << " at endMillis " << endMillis << endl;
-            lastUpdateOrSelectComplexity = currentUpdateOrSelectComplexity;
+        tie(currentSelectOrUpdateComplexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeSelectOrUpdateAlgorithmAnalysis("Insertion Test"s, 100, 200, 200, endMillis, 1000, 2000, 1000);
+        if (currentSelectOrUpdateComplexity != lastSelectOrUpdateComplexity) {
+            cout << "Select/Update test started measuring " << AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexityToString(currentSelectOrUpdateComplexity) << " at endMillis " << endMillis << endl;
+            lastSelectOrUpdateComplexity = currentSelectOrUpdateComplexity;
         }
     }
 
@@ -153,33 +153,33 @@ void databaseAlgorithmAnalysisLowLevelExperiments() {
     tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeInsertOrDeleteAlgorithmAnalysis("Insert/Delete", start1US, end1US, start2US, end2US, n); \
     cerr << algorithmAnalysisReport << "--> (computation result is " << r << ")" << endl << flush;
 
-#define TEST_UPDATE(testName, updateFunction)                                                                                                                       \
+#define TEST_SELECT(testName, selectFunction)                                                                                                                       \
     n = 1000;                                                                                                                                                       \
     cout << "Real " << testName << " with " << n << " elements on each pass" << flush;                                                                              \
     start1US = TimeMeasurements::getMonotonicRealTimeUS();                                                                                                          \
     for (unsigned int e=0; e<n; e++) {                                                                                                                              \
-        r += updateFunction(n);                                                                                                                                     \
+        r += selectFunction(n);                                                                                                                                     \
     }                                                                                                                                                               \
     end1US   = TimeMeasurements::getMonotonicRealTimeUS();                                                                                                          \
     delta1US = end1US - start1US;                                                                                                                                   \
     cout << " (pass1 = " << (delta1US) << "µs" << flush;                                                                                                            \
     start2US = TimeMeasurements::getMonotonicRealTimeUS();                                                                                                          \
     for (unsigned int e=n; e<n*2; e++) {                                                                                                                            \
-        r += updateFunction(n*2);                                                                                                                                   \
+        r += selectFunction(n*2);                                                                                                                                   \
     }                                                                                                                                                               \
     end2US   = TimeMeasurements::getMonotonicRealTimeUS();                                                                                                          \
     delta2US = end2US - start2US;                                                                                                                                   \
     cout << "; pass2 = " << (delta2US) << "µs): " << endl << flush;                                                                                                 \
-    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeUpdateOrSelectAlgorithmAnalysis("Select/Update", start1US, end1US, start2US, end2US, n, n*2, n); \
+    tie(complexity, algorithmAnalysisReport) = AlgorithmComplexityAndReentrancyAnalysis::computeSelectOrUpdateAlgorithmAnalysis("Select/Update", start1US, end1US, start2US, end2US, n, n*2, n); \
     cerr << algorithmAnalysisReport << "--> (computation result is " << r << ")" << endl << flush;
 
     TEST_INSERT("O(1) Insertion Test", O1Insert);
     TEST_INSERT("O(log(n)) Insertion Test", OLogNInsert);
     TEST_INSERT("O(n) Insertion Test", ONInsert);
 
-    TEST_UPDATE("O(1) Update Test",      O1Update);
-    TEST_UPDATE("O(log(n)) Update Test", OLogNUpdate);
-    TEST_UPDATE("O(n) Update Test",      ONUpdate);
+    TEST_SELECT("O(1) Select Test",      O1Select);
+    TEST_SELECT("O(log(n)) Select Test", OLogSelect);
+    TEST_SELECT("O(n) Select Test",      ONSelect);
 }
 
 void databaseAlgorithmAnalysisHighLevelExperiments() {
@@ -245,8 +245,8 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
     class ReentrancyExperiments: public AlgorithmComplexityAndReentrancyAnalysis {
     public:
         std::vector<int> insertElements;
-        std::vector<int> updateElements;
         std::vector<int> selectElements;
+        std::vector<int> updateElements;
         std::vector<int> deleteElements;
 
         ReentrancyExperiments()
@@ -256,8 +256,8 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
         void resetTables(EResetOccasion occasion) override {
         	if (occasion == EResetOccasion::FULL_RESET) {
 				insertElements = std::vector<int>(_numberOfElements, 0);
-				updateElements = std::vector<int>(_numberOfElements, 0);
 				selectElements = std::vector<int>(_numberOfElements, 0);
+				updateElements = std::vector<int>(_numberOfElements, 0);
 				deleteElements = std::vector<int>(_numberOfElements, 0);
         	}
         }

@@ -27,8 +27,8 @@ namespace mutua::testutils {
      * Complexity Analysis:
      * ===================
      *
-     * Methodology: We will insert, update, select and delete in two passes, using the same amount of items each time.
-     *              The algorithm complexity is measured on the time difference it takes to insert, update, select
+     * Methodology: We will insert, select, update and delete in two passes, using the same amount of items each time.
+     *              The algorithm complexity is measured on the time difference it takes to insert, select, update
      *              or delete each element on each pass. A little on Algorithm Complexity Analysis theory: Being n the
      *              number of elements on which the algorithm under analysis will work on, the algorithm is said to be:
      *              - O(1) complexity -- the operation times are independent on the number of elements already present;
@@ -45,7 +45,7 @@ namespace mutua::testutils {
      * That being said, we're lead to the following usable formulas:
      *
      *   Variables:
-     *     t(1)    -- time to insert / update / select / delete one element
+     *     t(1)    -- time to insert / select / update / delete one element
      *     t<z>(1) -- time measured on pass z (remember we only do two passes)
      *
      * Inserts and Deletes of n elements (p threads):
@@ -53,7 +53,7 @@ namespace mutua::testutils {
      * O(n)       when  t2(1)/t1(1) / 3 ~= 1
      * O(log(n))  when  t2(1)/t1(1) / log(n*3)/log(n) ~= 1 +/- 10%
      *
-     * Updates and Selects:
+     * Selects and Updates:
      * O(1)      when  t2 / t1                       ~= 1 for any p
      * O(n)      when  t2 / t1  /  (n2 / n1)         ~= 1 for any p
      * O(log n)  when  t2 / t1  /  log(n2) / log(n1) ~= 1 for any p
@@ -62,7 +62,7 @@ namespace mutua::testutils {
      * Reentrancy Analysis:
      * ===================
      *
-     * Methodology: We will insert, update, select and delete (all at the same time) the same number of elements and
+     * Methodology: We will insert, select, update and delete (all at the same time) the same number of elements and
      *              by the same routines as in the algorithm complexity analysis phase, with the following constraints:
      *              - All operations are performed by their own threads -- therefore, we'll have multiples of 4 threads;
      *              - Insertions occur freely, at the maximum speed;
@@ -78,8 +78,8 @@ namespace mutua::testutils {
     private:
         const string testName;
         const int    inserts;
-        const int    updates;
         const int    selects;
+        const int    updates;
         const int    deletes;
 
     public:
@@ -92,10 +92,10 @@ namespace mutua::testutils {
         static string EAlgorithmComplexityToString(EAlgorithmComplexity complexity);
 
 
-        /** Prepares for algorithm analysis & reentrancy test, with the given number of Inserts, Updates, Selects and Deletes */
-        AlgorithmComplexityAndReentrancyAnalysis(string testName, int numberOfInsertElements, int numberOfUpdateElements, int numberOfSelectElements);
+        /** Prepares for algorithm analysis & reentrancy test, with the given number of Inserts, Selects , Updates and Deletes */
+        AlgorithmComplexityAndReentrancyAnalysis(string testName, int numberOfInsertElements, int numberOfSelectElements, int numberOfUpdateElements);
 
-        /** Prepares for algorithm analysis & reentrancy test with the same number of elements for Inserts, Updates, Selects and Deletes */
+        /** Prepares for algorithm analysis & reentrancy test with the same number of elements for Inserts, Selects, Updates and Deletes */
         AlgorithmComplexityAndReentrancyAnalysis(string testName, int elements);
 
 
@@ -114,33 +114,33 @@ namespace mutua::testutils {
          * Returns :
          * {
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1Exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // INSERTs
-         *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // UPDATEs
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // SELECTs
+         *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // UPDATEs
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages}        // DELETEs
          * }
          **/
         tuple<
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // INSERTs
-              tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // SELECTs
+              tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>       // DELETEs
         >
-            analyseComplexity(bool performWarmUp, int insertThreads, int updateThreads, int selectThreads, int deleteThreads, bool verbose);
+            analyseComplexity(bool performWarmUp, int insertThreads, int selectThreads, int updateThreads, int deleteThreads, bool verbose);
 
         EAlgorithmComplexity
 			testReentrancy(unsigned int numberOfElements, bool verbose);
 
 
-        /** Performs the algorithm analysis for a reasonably large update/select operation (on a database or not).
-          * To perform the analysis, two passes of updates/selects of r elements must be done.
+        /** Performs the algorithm analysis for a reasonably large select/update operation (on a database or not).
+          * To perform the analysis, two passes of selects/updates of r elements must be done.
           * On the first pass, the data set must have n1 elements and on the second pass, n2 elements -- n2 must be (at least?) twice n1.
           * r should be reasonably large so that end-start can be accurately measured and account for OS, IO and network latencies.
           * start 1 & 2 and end 1 & 2 are measurement times, regardless of the measurement unit -- milliseconds or microseconds.
-          * The returned algorithm complexity is an indication of the time taken to update/select one element on a data set containing
-          * n elements, where O is the constant of proportionality -- the average time to update/select 1 element.
+          * The returned algorithm complexity is an indication of the time taken to select/update one element on a data set containing
+          * n elements, where O is the constant of proportionality -- the average time to select/update 1 element.
           * Returns: [1] -- the algorithm complexity;
           *          [2] -- a string with the algorithm analysis report. */
-        static std::tuple<EAlgorithmComplexity, string> computeUpdateOrSelectAlgorithmAnalysis(
+        static std::tuple<EAlgorithmComplexity, string> computeSelectOrUpdateAlgorithmAnalysis(
                 const string&            operation,
                 const unsigned long int& start1,
                 const unsigned long int& end1,
