@@ -194,12 +194,12 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
     class HelloDatabaseAlgorithmAnalysisWorld: public AlgorithmComplexityAndReentrancyAnalysis {
     public:
         std::vector<int> elements;
-        std::mutex  changeGuard;
-        std::mutex* selectGuard;
+        std::mutex  writeGuard;
+        std::mutex* readGuard;
 
         HelloDatabaseAlgorithmAnalysisWorld()
                 : AlgorithmComplexityAndReentrancyAnalysis("Hello, Database Algorithm Analysis World!!", 2000, 2000, 2000)
-                , selectGuard(nullptr) {
+                , readGuard(nullptr) {
             elements = std::vector<int>(2000);
         }
 
@@ -208,35 +208,35 @@ void databaseAlgorithmAnalysisHighLevelExperiments() {
         }
 
         void insertAlgorithm(unsigned int i) override {
-            std::lock_guard<std::mutex> lock(changeGuard);
-        	selectGuard = &changeGuard;
+            std::lock_guard<std::mutex> lock(writeGuard);
+        	readGuard = &writeGuard;
             elements[i] = i;
-            selectGuard = nullptr;
+            readGuard = nullptr;
         }
 
         void selectAlgorithm(unsigned int i) override {
-        	if (selectGuard != nullptr) std::lock_guard<std::mutex> lock(*selectGuard);
+        	if (readGuard != nullptr) std::lock_guard<std::mutex> lock(*readGuard);
             if (elements[i] != ((int)i)) {
                 cerr << "Select: item #" << i << ", on the insert phase, should be " << ((int)i) << " but is " << elements[i] << endl << flush;
             }
         }
 
         void updateAlgorithm(unsigned int i) override {
-            std::lock_guard<std::mutex> lock(changeGuard);
-        	selectGuard = &changeGuard;
+            std::lock_guard<std::mutex> lock(writeGuard);
+        	readGuard = &writeGuard;
             elements[i] = -((int)i);
-            selectGuard = nullptr;
+            readGuard = nullptr;
         }
 
         void deleteAlgorithm(unsigned int i) override {
-            std::lock_guard<std::mutex> lock(changeGuard);
-        	selectGuard = &changeGuard;
+            std::lock_guard<std::mutex> lock(writeGuard);
+        	readGuard = &writeGuard;
         	int value = elements[i];
             elements[i] -1;
             if (value != -((int)i)) {
                 cerr << "Delete: item #" << i << ", on the update phase, should be " << -((int)i) << " but was " << value << endl << flush;
             }
-            selectGuard = nullptr;
+            readGuard = nullptr;
         }
     };
     HelloDatabaseAlgorithmAnalysisWorld().analyseComplexity(true, 4, 4, 4, 4, true);
