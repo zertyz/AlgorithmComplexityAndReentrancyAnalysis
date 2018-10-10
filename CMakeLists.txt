@@ -1,9 +1,9 @@
 # Usage:
-#	TYPE="Debug";   rm -fr $TYPE; mkdir $TYPE; cd $TYPE; cmake -G Ninja -DCMAKE_BUILD_TYPE=$TYPE ..; cmake --build .; ctest; cd ..; ls -l "$TYPE/tests/cpp/AlgorithmComplexityAndReentrancyAnalysisSpikes"
-#	TYPE="Release"; rm -fr $TYPE; mkdir $TYPE; cd $TYPE; cmake -G Ninja -DCMAKE_BUILD_TYPE=$TYPE ..; cmake --build .; ctest; cd ..; ls -l "$TYPE/tests/cpp/AlgorithmComplexityAndReentrancyAnalysisSpikes"
+#	TYPE="Debug";   rm -fr $TYPE; mkdir $TYPE; cd $TYPE; cmake -G Ninja -DCMAKE_BUILD_TYPE=$TYPE ..; cmake --build .; ctest; cd ..; ls -l "$TYPE/tests/AlgorithmComplexityAndReentrancyAnalysisSpikes"
+#	TYPE="Release"; rm -fr $TYPE; mkdir $TYPE; cd $TYPE; cmake -G Ninja -DCMAKE_BUILD_TYPE=$TYPE ..; cmake --build .; ctest; cd ..; ls -l "$TYPE/tests/AlgorithmComplexityAndReentrancyAnalysisSpikes"
 
 cmake_minimum_required (VERSION 3.9)
-project (AlgorithmComplexityAndReentrancyAnalysis VERSION 2018.10.09)
+project                (AlgorithmComplexityAndReentrancyAnalysis VERSION 2018.10.09)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -11,18 +11,22 @@ set(CMAKE_CXX_STANDARD 17)
 # imported mutua libraries
 ##########################
 # mutua libraries have the inclues inside the "cpp/" directory
-set(LIBs_H_FILES, "")
 foreach (_referencedLib CppUtils SplitRun)
-	message("Referencing library '${_referencedLib}' in '${${_referencedLib}_DIR}'.")
-	find_package(${_referencedLib} CONFIG REQUIRED)
-	add_library (${_referencedLib} STATIC IMPORTED GLOBAL)
-	#target_include_directories(${_referencedLib} INTERFACE )
-	include_directories("../${_referencedLib}/cpp/")
-	#file(GLOB_RECURSE THIS_LIB_H_FILES ../${_referencedLib}/cpp/*.h)
-	#message(" --> this lib .h: ${THIS_LIB_H_FILES}")
-	#set(LIBs_H_FILES "${LIBs_H_FILES} ${THIS_LIB_H_FILES}")
+  set(_referencedLib_SOURCES "../${_referencedLib}/cpp/")
+  message("    --> including library '${_referencedLib}' with headers in '${_referencedLib_SOURCES}'")
+  if (NOT TARGET ${_referencedLib})
+    find_package(${_referencedLib} CONFIG REQUIRED)
+    add_library (${_referencedLib} STATIC IMPORTED GLOBAL)
+    message("        (built in '${${_referencedLib}_DIR}')")
+  else()
+    add_library(mutua::${_referencedLib} ALIAS ${_referencedLib})
+    message("        (defined by the parent CMakeLists.txt)")
+  endif()
+  include_directories("${_referencedLib_SOURCES}")
 endforeach()
 
+
+# debug -- print all variables
 #get_cmake_property(_variableNames VARIABLES)
 #list (SORT _variableNames)
 #foreach (_variableName ${_variableNames})
@@ -37,8 +41,6 @@ file(GLOB_RECURSE H_FILES   cpp/*.h)
 message("Building '${PROJECT_NAME}' library with:")
 message("      .h files: [${H_FILES}]")
 message("    .cpp files: [${CPP_FILES}]")
-#message("other .h files: [${LIBs_H_FILES}]")
-#add_library(${PROJECT_NAME} ${LIBs_H_FILES} ${H_FILES} ${CPP_FILES})
 add_library(${PROJECT_NAME} ${H_FILES} ${CPP_FILES})
 
 include(GenerateExportHeader)
@@ -84,7 +86,4 @@ install(FILES       cmake/${PROJECT_NAME}Config.cmake "${CMAKE_CURRENT_BINARY_DI
 export(PACKAGE ${PROJECT_NAME})
 
 enable_testing()
-add_subdirectory("tests/cpp")
-
-#add_executable(AlgorithmComplexityAndReentrancyAnalysisSpikes AlgorithmComplexityAndReentrancyAnalysisSpikes.cpp ../../../../CppUtils/cpp/TimeMeasurements.h ../../../../CppUtils/cpp/TimeMeasurements.cpp ../../cpp/AlgorithmComplexityAndReentrancyAnalysis.h ../../cpp/AlgorithmComplexityAndReentrancyAnalysis.cpp ../../../SplitRun/cpp/SplitRun.h ../../../SplitRun/cpp/SplitRun.cpp)
-
+add_subdirectory("tests/")
