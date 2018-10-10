@@ -9,11 +9,11 @@
 
 using namespace std;
 
-#include "../../../../CppUtils/cpp/TimeMeasurements.h"
+#include <TimeMeasurements.h>
 using namespace mutua::cpputils;
 
 #include "../../cpp/AlgorithmComplexityAndReentrancyAnalysis.h"
-#include "../../../SplitRun/cpp/SplitRun.h"
+#include <SplitRun.h>
 using namespace mutua::testutils;
 
 

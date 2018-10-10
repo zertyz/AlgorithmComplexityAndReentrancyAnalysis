@@ -4,11 +4,11 @@
 #include <thread>
 #include <mutex>
 
-#include "../../SplitRun/cpp/SplitRun.h"
+#include <SplitRun.h>
 #include "AlgorithmComplexityAndReentrancyAnalysis.h"
 using namespace mutua::testutils;
 
-#include "../../../CppUtils/cpp/TimeMeasurements.h"
+#include <TimeMeasurements.h>
 using namespace mutua::cpputils;
 
 using namespace std;
