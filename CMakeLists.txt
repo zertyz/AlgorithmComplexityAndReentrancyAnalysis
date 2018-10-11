@@ -6,11 +6,13 @@ cmake_minimum_required (VERSION 3.9)
 project                (AlgorithmComplexityAndReentrancyAnalysis VERSION 2018.10.09)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS    "${CMAKE_CXX_FLAGS} -march=native")	# binary is optimized, but machine dependent
 
 
 # imported mutua libraries
 ##########################
 # mutua libraries have the inclues inside the "cpp/" directory
+
 foreach (_referencedLib CppUtils SplitRun)
   set(_referencedLib_SOURCES "../${_referencedLib}/cpp/")
   message("    --> including library '${_referencedLib}' with headers in '${_referencedLib_SOURCES}'")
