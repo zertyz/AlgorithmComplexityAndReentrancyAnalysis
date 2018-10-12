@@ -15,7 +15,7 @@ using namespace std;
 
 
 string AlgorithmComplexityAndReentrancyAnalysis::
-EAlgorithmComplexityToString(EAlgorithmComplexity complexity) {
+		EAlgorithmComplexityToString(EAlgorithmComplexity complexity) {
 
     switch (complexity) {
         case EAlgorithmComplexity::BetterThanO1:
@@ -431,16 +431,18 @@ AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity AlgorithmComplexi
 }
 
 
+#define lPAD12(n) std::to_string(n) + ((n)>99999999999 ? "" : ((n)>9999999999 ? " " : ((n)>999999999 ? "  " : ((n)>99999999 ? "   " : ((n)>9999999 ? "    " : ((n)>999999 ? "     " : ((n)>99999 ? "      " : ((n)>9999 ? "       " : ((n)>999 ? "        " : ((n)>99 ? "         " : ((n)>9 ? "          " : "           ")))))))))))
+
 std::tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, string> AlgorithmComplexityAndReentrancyAnalysis::
-    computeSelectOrUpdateAlgorithmAnalysis(
-        const string&            operation,
-        const unsigned long int& start1,
-        const unsigned long int& end1,
-        const unsigned long int& start2,
-        const unsigned long int& end2,
-        const unsigned int       n1,
-        const unsigned int       n2,
-        const unsigned int       r) {
+    	computeSelectOrUpdateAlgorithmAnalysis(
+    			const string&            operation,
+				const unsigned long int& start1,
+				const unsigned long int& end1,
+				const unsigned long int& start2,
+				const unsigned long int& end2,
+				const unsigned int       n1,
+				const unsigned int       n2,
+				const unsigned int       r) {
 
     // the acceptable percent measurement error when computing complexity
     double percentError = 0.10;
@@ -476,22 +478,22 @@ std::tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, strin
     }
 
     string algorithmAnalysisReport = operation + " algorithm analysis:\n" +
-                                     "   (^t)\t\t\t  n\t\t  r\t\tt(1)\n" +
-                                     "1: "  + std::to_string(deltaT1) + (deltaT1>99999999 ? "" : (deltaT1>9999 ? "\t" : "\t\t")) + "\t" + std::to_string(n1) + "\t" + std::to_string(r) + "\t" + std::to_string(t1) + "\n" +
-                                     "2: "  + std::to_string(deltaT2) + (deltaT2>99999999 ? "" : (deltaT2>9999 ? "\t" : "\t\t")) + "\t" + std::to_string(n2) + "\t" + std::to_string(r) + "\t" + std::to_string(t2) + "\n" +
+                                     "    (^t)            n              r               t(1)\n" +
+                                     "1:  "  + lPAD12(deltaT1) + "\t" + lPAD12(n1) + "\t" + lPAD12(r) + "\t" + std::to_string(t1) + "\n" +
+                                     "2:  "  + lPAD12(deltaT2) + "\t" + lPAD12(n2) + "\t" + lPAD12(r) + "\t" + std::to_string(t2) + "\n" +
                                      "--> " + EAlgorithmComplexityToString(complexity) + "\n";
 
     return {complexity, algorithmAnalysisReport};
 }
 
 tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, string> AlgorithmComplexityAndReentrancyAnalysis::
-    computeInsertOrDeleteAlgorithmAnalysis(
-        const string&            operation,
-        const unsigned long int& start1,
-        const unsigned long int& end1,
-        const unsigned long int& start2,
-        const unsigned long int& end2,
-        const unsigned int       n) {
+    	computeInsertOrDeleteAlgorithmAnalysis(
+    			const string&            operation,
+				const unsigned long int& start1,
+				const unsigned long int& end1,
+				const unsigned long int& start2,
+				const unsigned long int& end2,
+				const unsigned int       n) {
 
     // the acceptable percent measurement error when computing complexity
     double percentError = 0.10;
@@ -527,9 +529,9 @@ tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, string> Al
     }
 
     string algorithmAnalysisReport = operation + " algorithm analysis:\n"s +
-                                     "   (^t)\t\t\t  n\t\tt(1)\n"s +
-                                     "1: "  + std::to_string(deltaT1) + (deltaT1>99999999 ? "" : (deltaT1>9999 ? "\t" : "\t\t")) + "\t" + std::to_string(n)   + "\t" + std::to_string(t1) + "\n" +
-                                     "2: "  + std::to_string(deltaT2) + (deltaT2>99999999 ? "" : (deltaT2>9999 ? "\t" : "\t\t")) + "\t" + std::to_string(n*2) + "\t" + std::to_string(t2) + "\n" +
+                                     "    (^t)            n              t(1)\n"s +
+                                     "1:  "  + lPAD12(deltaT1) + "\t" + lPAD12(n)   + "\t" + std::to_string(t1) + "\n" +
+                                     "2:  "  + lPAD12(deltaT2) + "\t" + lPAD12(n*2) + "\t" + std::to_string(t2) + "\n" +
                                      "--> " + EAlgorithmComplexityToString(complexity) + "\n";
 
     return {complexity, algorithmAnalysisReport};
