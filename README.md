@@ -1,5 +1,5 @@
 # AlgorithmComplexityAndReentrancyAnalysis
-Library to measure the complexity of (database) algorithms AND to test the reentrancy of such algorithms.
+Library to measure the complexity (Big-O notation) of algorithms AND to test the reentrancy of such algorithms.
 
 Please see 'CMakeLists.txt' for building info.
 
