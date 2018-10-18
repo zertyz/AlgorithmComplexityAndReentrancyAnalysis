@@ -17,11 +17,16 @@ namespace mutua::testutils {
      * transcoded to C++ by luiz, Sep 18, 2018
      * last transcoding  by luiz, Sep 18, 2018
      *
-     * Measures the complexity of (database) algorithms
+     * Measures the complexity (Big-O notation) of (collection/container/database) algorithms
      *
      *   AND
      *
-     * Tests the reentrancy of such algorithms.
+     * Tests the reentrancy of such algorithms
+     *
+     *   PROVIDING TOOLS for you to
+     *
+     * build implementations for insert, select, update and delete methods that
+     * are both reentrant AND efficient.
      *
      *
      * Complexity Analysis:
@@ -70,8 +75,8 @@ namespace mutua::testutils {
      *              - Updates occur only for already selected elements;
      *              - Deletions occur only for already updated elements.
      * Notes:
-     *  - The operation functions must test the data -- selects must check inserts, deletes must check updates. You may
-     *    either print or throw an exception in case of errors;
+     *  - The operation functions must test the data -- selects must check inserts, deletes must check updates. You should
+     *    throw an exception in case of errors;
     */
     class AlgorithmComplexityAndReentrancyAnalysis {
 
