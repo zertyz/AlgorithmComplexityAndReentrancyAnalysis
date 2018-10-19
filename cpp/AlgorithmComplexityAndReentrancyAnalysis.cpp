@@ -344,8 +344,9 @@ public:
     unsigned long long int                    timeusSpentTestingInsertsAndSelecting;
     unsigned long long int                    timeusSpentUpdating;
     unsigned long long int                    timeusSpentTestingUpdatesAndDeleting;
+    string&                                   testOutput;
 
-    ReentrancySplitRunTest(AlgorithmComplexityAndReentrancyAnalysis* algorithms, unsigned int numberOfElements, unsigned int verbosityFactor)
+    ReentrancySplitRunTest(AlgorithmComplexityAndReentrancyAnalysis* algorithms, unsigned int numberOfElements, unsigned int verbosityFactor, string& testOutput)
             : SplitRun(-1)
             , algorithms(algorithms)
             , numberOfElements(numberOfElements)
@@ -354,7 +355,13 @@ public:
             , timeusSpentInserting                 (0ull)
             , timeusSpentTestingInsertsAndSelecting(0ull)
             , timeusSpentUpdating                  (0ull)
-            , timeusSpentTestingUpdatesAndDeleting (0ull) {}
+            , timeusSpentTestingUpdatesAndDeleting (0ull)
+    		, testOutput(testOutput) {}
+
+    void output(const char* op) {
+    	testOutput.append(op);
+    	cerr << op << flush;
+    }
 
     void splitRun() override {
         opGuard.lock();
@@ -362,7 +369,7 @@ public:
         opGuard.unlock();
         if (operation  == 0) {                    // INSERT
             for (insertIndex=0; insertIndex<numberOfElements; insertIndex++) {
-                if (verbosityFactor && (insertIndex % verbosityFactor == 0)) cerr << "I" << flush;
+                if (verbosityFactor && (insertIndex % verbosityFactor == 0)) output("I");
                 unsigned long long int start  = TimeMeasurements::getMonotonicRealTimeUS();
                 algorithms->insertAlgorithm(insertIndex);
                 unsigned long long int finish = TimeMeasurements::getMonotonicRealTimeUS();
@@ -371,7 +378,7 @@ public:
         } else if (operation == 1) {             // SELECT
             for (selectIndex=0; selectIndex<numberOfElements; selectIndex++) {
                 while (selectIndex >= insertIndex) this_thread::sleep_for(chrono::milliseconds(100));
-                if (verbosityFactor && (selectIndex % verbosityFactor == 0)) cerr << "S" << flush;
+                if (verbosityFactor && (selectIndex % verbosityFactor == 0)) output("S");
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
                 algorithms->selectAlgorithm(selectIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
@@ -380,7 +387,7 @@ public:
         } else if (operation == 2) {             // UPDATE
             for (updateIndex=0; updateIndex<numberOfElements; updateIndex++) {
                 while (updateIndex >= selectIndex) this_thread::sleep_for(chrono::milliseconds(100));
-                if (verbosityFactor && (updateIndex % verbosityFactor == 0)) cerr << "U" << flush;
+                if (verbosityFactor && (updateIndex % verbosityFactor == 0)) output("U");
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
                 algorithms->updateAlgorithm(updateIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
@@ -389,7 +396,7 @@ public:
         } else if (operation == 3) {             // DELETE
             for (deleteIndex=0; deleteIndex<numberOfElements; deleteIndex++) {
                 while (deleteIndex >= updateIndex) this_thread::sleep_for(chrono::milliseconds(100));
-                if (verbosityFactor && (deleteIndex % verbosityFactor == 0)) cerr << "D" << flush;
+                if (verbosityFactor && (deleteIndex % verbosityFactor == 0)) output("D");
                 unsigned long long start  = TimeMeasurements::getMonotonicRealTimeUS();
                 algorithms->deleteAlgorithm(deleteIndex);
                 unsigned long long finish = TimeMeasurements::getMonotonicRealTimeUS();
@@ -401,15 +408,16 @@ public:
     }
 };
 
+#define OUTPUT(s) testOutput.append(s); if (verbose) cerr << s << flush
+string AlgorithmComplexityAndReentrancyAnalysis::
+		testReentrancy(unsigned int numberOfElements, bool verbose) {
 
-AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity AlgorithmComplexityAndReentrancyAnalysis::
-        testReentrancy(unsigned int numberOfElements, bool verbose) {
-
-    if (verbose) cerr << testName << " Algorithm Reentrancy Tests" << flush;
+    string testOutput = "";
+	OUTPUT(testName + " Algorithm Reentrancy Tests");
     resetTables(EResetOccasion::FULL_RESET);
-    if (verbose) cerr << ": " << flush;
+    OUTPUT(": ");
 
-    ReentrancySplitRunTest reentrancyTest(this, numberOfElements, verbose ? numberOfElements/4 : 0);
+    ReentrancySplitRunTest reentrancyTest(this, numberOfElements, verbose ? numberOfElements/4 : 0, testOutput);
 
     // prepare the simultaneous tasks
     //for (unsigned int threadSet=0; threadSet<numberOfThreadSets; threadSet++) {
@@ -421,15 +429,16 @@ AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity AlgorithmComplexi
 
     SplitRun::runAndWaitForAll();
 
-    if (verbose) cerr << " Done: " << flush;
+    OUTPUT(" Done: ");
     resetTables(EResetOccasion::FINAL_RESET);
-    if (verbose) cerr << (reentrancyTest.timeusSpentInserting                  / 1000llu) << "ms inserting, " \
-                      << (reentrancyTest.timeusSpentTestingInsertsAndSelecting / 1000llu) << "ms selecting & testing, " \
-                      << (reentrancyTest.timeusSpentUpdating                   / 1000llu) << "ms updating, " \
-                      << (reentrancyTest.timeusSpentTestingUpdatesAndDeleting  / 1000llu) << "ms testing & deleting." << endl << flush;
+    OUTPUT(to_string(reentrancyTest.timeusSpentInserting                  / 1000llu) + "ms inserting, " +
+           to_string(reentrancyTest.timeusSpentTestingInsertsAndSelecting / 1000llu) + "ms selecting & testing, " +
+		   to_string(reentrancyTest.timeusSpentUpdating                   / 1000llu) + "ms updating, " +
+		   to_string(reentrancyTest.timeusSpentTestingUpdatesAndDeleting  / 1000llu) + "ms testing & deleting.\n");
 
-    return EAlgorithmComplexity::BetterThanO1;
+    return testOutput;
 }
+#undef OUTPUT
 
 
 #define lPAD12(n) std::to_string(n) + ((n)>99999999999 ? "" : ((n)>9999999999 ? " " : ((n)>999999999 ? "  " : ((n)>99999999 ? "   " : ((n)>9999999 ? "    " : ((n)>999999 ? "     " : ((n)>99999 ? "      " : ((n)>9999 ? "       " : ((n)>999 ? "        " : ((n)>99 ? "         " : ((n)>9 ? "          " : "           ")))))))))))

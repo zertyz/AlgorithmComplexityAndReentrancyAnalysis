@@ -132,7 +132,7 @@ namespace mutua::testutils {
         >
             analyseComplexity(bool performWarmUp, int insertThreads, int selectThreads, int updateThreads, int deleteThreads, bool verbose);
 
-        EAlgorithmComplexity
+        std::string
 			testReentrancy(unsigned int numberOfElements, bool verbose);
 
 
