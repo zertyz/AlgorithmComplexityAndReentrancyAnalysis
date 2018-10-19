@@ -8,6 +8,7 @@
 #include "AlgorithmComplexityAndReentrancyAnalysis.h"
 using namespace mutua::testutils;
 
+#include <BetterExceptions.h>
 #include <TimeMeasurements.h>
 using namespace mutua::cpputils;
 
@@ -55,22 +56,22 @@ AlgorithmComplexityAndReentrancyAnalysis::
 
 
 void AlgorithmComplexityAndReentrancyAnalysis::insertAlgorithm(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate INSERTs, you must override 'insertAlgorithm'");
+    THROW_EXCEPTION(std::runtime_error, "If you want your algorithm analysis & reentrancy tests instance to validate INSERTs, you must override 'insertAlgorithm'");
 }
 
 
 void AlgorithmComplexityAndReentrancyAnalysis::selectAlgorithm(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate SELECTs, you must override 'selectAlgorithm'");
+    THROW_EXCEPTION(std::runtime_error, "If you want your algorithm analysis & reentrancy tests instance to validate SELECTs, you must override 'selectAlgorithm'");
 }
 
 
 void AlgorithmComplexityAndReentrancyAnalysis::updateAlgorithm(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate UPDATEs, you must override 'updateAlgorithm'");
+    THROW_EXCEPTION(std::runtime_error, "If you want your algorithm analysis & reentrancy tests instance to validate UPDATEs, you must override 'updateAlgorithm'");
 }
 
 
 void AlgorithmComplexityAndReentrancyAnalysis::deleteAlgorithm(unsigned int i) {
-    throw std::runtime_error("If you want your algorithm analysis & reentrancy tests instance to validate DELETEs, you must override 'deleteAlgorithm'");
+    THROW_EXCEPTION(std::runtime_error, "If you want your algorithm analysis & reentrancy tests instance to validate DELETEs, you must override 'deleteAlgorithm'");
 }
 
 
@@ -210,7 +211,7 @@ tuple<
         } else if (pass == 2) {
             if (verbose) cerr << "); Second Pass ( " << flush;
         } else {
-            throw std::runtime_error(__FILE__  " was not prepared for pass #" + std::to_string(pass) + " while inserting / updating / selecting");
+            THROW_EXCEPTION(std::runtime_error, __FILE__ " was not prepared for pass #" + std::to_string(pass) + " while inserting / updating / selecting");
         }
 
         // INSERTS
@@ -269,7 +270,7 @@ tuple<
             } else if (pass == 2) {
                 if (verbose) cerr << "Second Pass " << flush;
             } else {
-                throw std::runtime_error(__FILE__  " was not prepared for pass #" + std::to_string(pass) + " while deleting");
+                THROW_EXCEPTION(std::runtime_error, __FILE__  " was not prepared for pass #" + std::to_string(pass) + " while deleting");
             }
 
             // DELETES
@@ -395,7 +396,7 @@ public:
                 timeusSpentTestingUpdatesAndDeleting += finish-start;
             }
         } else {
-            throw std::runtime_error("unknown operation #" + to_string(operation));
+            THROW_EXCEPTION(std::runtime_error, "unknown operation #" + to_string(operation));
         }
     }
 };

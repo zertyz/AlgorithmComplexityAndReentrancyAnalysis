@@ -9,6 +9,7 @@
 
 using namespace std;
 
+#include <BetterExceptions.h>
 #include <TimeMeasurements.h>
 using namespace mutua::cpputils;
 
