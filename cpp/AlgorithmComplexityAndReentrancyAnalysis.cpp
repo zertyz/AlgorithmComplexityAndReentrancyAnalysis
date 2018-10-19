@@ -153,7 +153,8 @@ public:
     }
 };
 
-tuple<
+#define OUTPUT_MESSAGE(s) outputMessages.append(s); if (verbose) cerr << s << flush
+tuple<string,                                                                                                                                                                             // output messages
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // INSERTs
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // SELECTs
       tuple<AlgorithmComplexityAndReentrancyAnalysis::EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
@@ -183,14 +184,15 @@ tuple<
     EAlgorithmComplexity updateComplexity;
     EAlgorithmComplexity deleteComplexity;
     string               algorithmAnalisysReport;
+    string               outputMessages = "";
 
-    if (verbose) cerr << testName << " Algorithm Complexity Analysis: " << flush;
+    OUTPUT_MESSAGE(testName + " Algorithm Complexity Analysis: ");
 
     // WARMUP
     if (performWarmUp) {
-        if (verbose) cerr << "Warm" << flush;
+    	OUTPUT_MESSAGE("Warm");
         resetTables(EResetOccasion::PRE_WARMUP_RESET);
-        if (verbose) cerr << " Up; " << flush;
+        OUTPUT_MESSAGE(" Up; ");
         std::vector<unique_ptr<WarmUpSplitRun>> warmUpSplitRunInstances(insertThreads);
         for (int threadNumber=0; threadNumber<insertThreads; threadNumber++) {
             warmUpSplitRunInstances[threadNumber] = unique_ptr<WarmUpSplitRun>(new WarmUpSplitRun(threadNumber, perThreadInserts, this));
@@ -207,16 +209,16 @@ tuple<
     for (int pass=1; pass<=numberOfPasses; pass++) {
 
         if (pass == 1) {
-            if (verbose) cerr << "First Pass ( " << flush;
+        	OUTPUT_MESSAGE("First Pass ( ");
         } else if (pass == 2) {
-            if (verbose) cerr << "); Second Pass ( " << flush;
+        	OUTPUT_MESSAGE("); Second Pass ( ");
         } else {
             THROW_EXCEPTION(std::runtime_error, __FILE__ " was not prepared for pass #" + std::to_string(pass) + " while inserting / updating / selecting");
         }
 
         // INSERTS
         if (insertThreads > 0) {
-            if (verbose) cerr << "Insert " << flush;
+        	OUTPUT_MESSAGE("Insert ");
             std::vector<unique_ptr<InsertSplitRun>> insertSplitRunInstances(insertThreads);
             for (int threadNumber=0; threadNumber<insertThreads; threadNumber++) {
                 insertSplitRunInstances[threadNumber] = unique_ptr<InsertSplitRun>(new InsertSplitRun(threadNumber, perThreadInserts, this, pass, numberOfFirstPassInsertElements));
@@ -229,7 +231,7 @@ tuple<
 
         // SELECTS
         if (selectThreads > 0) {
-            if (verbose) cerr << "Select " << flush;
+        	OUTPUT_MESSAGE("Select ");
             std::vector<unique_ptr<SelectSplitRun>> selectSplitRunInstances(selectThreads);
             for (int threadNumber=0; threadNumber<selectThreads; threadNumber++) {
                 selectSplitRunInstances[threadNumber] = unique_ptr<SelectSplitRun>(new SelectSplitRun(threadNumber, perThreadSelects, this, pass, numberOfFirstPassSelectElements));
@@ -242,7 +244,7 @@ tuple<
 
         // UPDATES
         if (updateThreads > 0) {
-            if (verbose) cerr << "Update " << flush;
+        	OUTPUT_MESSAGE("Update ");
             std::vector<unique_ptr<UpdateSplitRun>> updateSplitRunInstances(updateThreads);
             for (int threadNumber=0; threadNumber<updateThreads; threadNumber++) {
                 updateSplitRunInstances[threadNumber] = unique_ptr<UpdateSplitRun>(new UpdateSplitRun(threadNumber, perThreadUpdates, this, pass, numberOfFirstPassUpdateElements));
@@ -254,21 +256,21 @@ tuple<
         }
     }
 
-    if (verbose) cerr << ")" << flush;
+    OUTPUT_MESSAGE(")");
 
     // delete passes
     ////////////////
 
     if (deleteThreads > 0) {
 
-        if (verbose) cerr << "; Delete ( " << flush;
+    	OUTPUT_MESSAGE("; Delete ( ");
 
         for (int pass=numberOfPasses; pass>=1; pass--) {
 
             if (pass == 1) {
-                if (verbose) cerr << "First Pass " << flush;
+            	OUTPUT_MESSAGE("First Pass ");
             } else if (pass == 2) {
-                if (verbose) cerr << "Second Pass " << flush;
+            	OUTPUT_MESSAGE("Second Pass ");
             } else {
                 THROW_EXCEPTION(std::runtime_error, __FILE__  " was not prepared for pass #" + std::to_string(pass) + " while deleting");
             }
@@ -285,48 +287,50 @@ tuple<
 
         }
 
-        if (verbose) cerr << ")" << flush;
+        OUTPUT_MESSAGE(")");
 
     }
 
-    if (verbose) cerr << "." << endl << flush;
+    OUTPUT_MESSAGE(".\n");
 
     if (insertThreads > 0) {
         tie(insertComplexity, algorithmAnalisysReport) = computeInsertOrDeleteAlgorithmAnalysis("Insert",
                                                                                                 insertStart[0], insertEnd[0],
                                                                                                 insertStart[1], insertEnd[1], inserts/2);
-        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
+        OUTPUT_MESSAGE(algorithmAnalisysReport + "\n");
     }
     if (selectThreads > 0) {
         tie(selectComplexity, algorithmAnalisysReport) = computeSelectOrUpdateAlgorithmAnalysis("Select",
                                                                                                 selectStart[0], selectEnd[0],
                                                                                                 selectStart[1], selectEnd[1],
                                                                                                 numberOfFirstPassSelectElements, numberOfSecondPassSelectElements, selects);
-        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
+        OUTPUT_MESSAGE(algorithmAnalisysReport + "\n");
     }
     if (updateThreads > 0) {
         tie(updateComplexity, algorithmAnalisysReport) = computeSelectOrUpdateAlgorithmAnalysis("Update",
                                                                                                 updateStart[0], updateEnd[0],
                                                                                                 updateStart[1], updateEnd[1],
                                                                                                 numberOfFirstPassUpdateElements, numberOfSecondPassUpdateElements, updates);
-        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
+        OUTPUT_MESSAGE(algorithmAnalisysReport + "\n");
     }
     if (deleteThreads > 0) {
         tie(deleteComplexity, algorithmAnalisysReport) = computeInsertOrDeleteAlgorithmAnalysis("Delete",
                                                                                                 deleteStart[0], deleteEnd[0],
                                                                                                 deleteStart[1], deleteEnd[1], deletes/2);
-        if (verbose) cerr << algorithmAnalisysReport << endl << flush;
+        OUTPUT_MESSAGE(algorithmAnalisysReport + "\n");
     }
 
     resetTables(EResetOccasion::FINAL_RESET);
 
     return {
+    	outputMessages,
         {insertComplexity, insertEnd[0]-insertStart[0], insertEnd[1]-insertStart[1], insertExceptions[0], insertExceptions[1], insertExceptionReportMessages[0], insertExceptionReportMessages[1]},     // INSERTs
         {selectComplexity, selectEnd[0]-selectStart[0], selectEnd[1]-selectStart[1], selectExceptions[0], selectExceptions[1], selectExceptionReportMessages[0], selectExceptionReportMessages[1]},     // SELECTs
         {updateComplexity, updateEnd[0]-updateStart[0], updateEnd[1]-updateStart[1], updateExceptions[0], updateExceptions[1], updateExceptionReportMessages[0], updateExceptionReportMessages[1]},     // UPDATEs
         {deleteComplexity, deleteEnd[0]-deleteStart[0], deleteEnd[1]-deleteStart[1], deleteExceptions[0], deleteExceptions[1], deleteExceptionReportMessages[0], deleteExceptionReportMessages[1]}      // DELETEs
     };
 }
+#undef OUTPUT_MESSAGE
 
 
 class ReentrancySplitRunTest: public SplitRun {
@@ -408,16 +412,16 @@ public:
     }
 };
 
-#define OUTPUT(s) testOutput.append(s); if (verbose) cerr << s << flush
+#define OUTPUT_MESSAGE(s) outputMessages.append(s); if (verbose) cerr << s << flush
 string AlgorithmComplexityAndReentrancyAnalysis::
 		testReentrancy(unsigned int numberOfElements, bool verbose) {
 
-    string testOutput = "";
-	OUTPUT(testName + " Algorithm Reentrancy Tests");
+    string outputMessages = "";
+	OUTPUT_MESSAGE(testName + " Algorithm Reentrancy Tests");
     resetTables(EResetOccasion::FULL_RESET);
-    OUTPUT(": ");
+    OUTPUT_MESSAGE(": ");
 
-    ReentrancySplitRunTest reentrancyTest(this, numberOfElements, verbose ? numberOfElements/4 : 0, testOutput);
+    ReentrancySplitRunTest reentrancyTest(this, numberOfElements, verbose ? numberOfElements/4 : 0, outputMessages);
 
     // prepare the simultaneous tasks
     //for (unsigned int threadSet=0; threadSet<numberOfThreadSets; threadSet++) {
@@ -429,16 +433,16 @@ string AlgorithmComplexityAndReentrancyAnalysis::
 
     SplitRun::runAndWaitForAll();
 
-    OUTPUT(" Done: ");
+    OUTPUT_MESSAGE(" Done: ");
     resetTables(EResetOccasion::FINAL_RESET);
-    OUTPUT(to_string(reentrancyTest.timeusSpentInserting                  / 1000llu) + "ms inserting, " +
+    OUTPUT_MESSAGE(to_string(reentrancyTest.timeusSpentInserting                  / 1000llu) + "ms inserting, " +
            to_string(reentrancyTest.timeusSpentTestingInsertsAndSelecting / 1000llu) + "ms selecting & testing, " +
 		   to_string(reentrancyTest.timeusSpentUpdating                   / 1000llu) + "ms updating, " +
 		   to_string(reentrancyTest.timeusSpentTestingUpdatesAndDeleting  / 1000llu) + "ms testing & deleting.\n");
 
-    return testOutput;
+    return outputMessages;
 }
-#undef OUTPUT
+#undef OUTPUT_MESSAGE
 
 
 #define lPAD12(n) std::to_string(n) + ((n)>99999999999 ? "" : ((n)>9999999999 ? " " : ((n)>999999999 ? "  " : ((n)>99999999 ? "   " : ((n)>9999999 ? "    " : ((n)>999999 ? "     " : ((n)>99999 ? "      " : ((n)>9999 ? "       " : ((n)>999 ? "        " : ((n)>99 ? "         " : ((n)>9 ? "          " : "           ")))))))))))

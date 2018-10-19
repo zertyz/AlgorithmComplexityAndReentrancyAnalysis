@@ -118,13 +118,14 @@ namespace mutua::testutils {
         /**
          * Returns :
          * {
+         *     (string)outputMessages,
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1Exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // INSERTs
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // SELECTs
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages},       // UPDATEs
          *     {EAlgorithmComplexity, (ull)pass1MicroS, (ull)pass2MicroS, (vector<string>:) pass1exceptions, pass2Exceptions, pass1ExceptionReportMessages, pass2ExceptionReportMessages}        // DELETEs
          * }
          **/
-        tuple<
+        tuple<string,                                                                                                                             	    // output messages
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // INSERTs
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // SELECTs
               tuple<EAlgorithmComplexity, unsigned long long, unsigned long long, vector<string>, vector<string>, vector<string>, vector<string>>,      // UPDATEs
