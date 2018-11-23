@@ -11,8 +11,8 @@ using namespace std;
 namespace mutua::testutils {
 
     /**
-     * AlgorithmComplexityAndReentrancyAnalysis.cpp
-     * ============================================
+     * AlgorithmComplexityAndReentrancyAnalysis.h
+     * ==========================================
      * created (in Java) by luiz, Jul 28, 2015, as DatabaseAlgorithmAnalysis.java
      * transcoded to C++ by luiz, Sep 18, 2018
      * last transcoding  by luiz, Sep 18, 2018
